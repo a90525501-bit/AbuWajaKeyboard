@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#1A1A1A"
+    android:layoutDirection="rtl"
+    android:padding="4dp">
+
+    <LinearLayout android:id="@+id/row1"
+        android:layout_width="match_parent" android:layout_height="48dp"/>
+    <LinearLayout android:id="@+id/row2"
+        android:layout_width="match_parent" android:layout_height="48dp"/>
+    <LinearLayout android:id="@+id/row3"
+        android:layout_width="match_parent" android:layout_height="48dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent" android:layout_height="48dp">
+        <Button android:id="@+id/key_delete"
+            android:layout_width="0dp" android:layout_height="match_parent"
+            android:layout_weight="2" android:text="⌫"
+            android:background="@drawable/key_bg"
+            android:textColor="#FFD700"/>
+        <Button android:id="@+id/key_space"
+            android:layout_width="0dp" android:layout_height="match_parent"
+            android:layout_weight="6" android:text="أبو وجع الصبيحي"
+            android:background="@drawable/key_bg"
+            android:textColor="#FFD700"/>
+        <Button android:id="@+id/key_enter"
+            android:layout_width="0dp" android:layout_height="match_parent"
+            android:layout_weight="2" android:text="↵"
+            android:background="@drawable/key_bg"
+            android:textColor="#FFD700"/>
+    </LinearLayout>
+</LinearLayout>
