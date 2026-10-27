@@ -115,7 +115,11 @@ class AbuWajaIME : InputMethodService() {
     // ================= دورة الحياة =================
     override fun onCreate() {
         super.onCreate()
-        learned = prefs.getStringSet("learned", emptySet())!!.toMutableList()
+        try {
+            learned = prefs.getStringSet("learned", emptySet())!!.toMutableList()
+        } catch (e: Throwable) {
+            learned = mutableListOf()
+        }
     }
 
     override fun onCreateInputView(): View {
@@ -124,7 +128,7 @@ class AbuWajaIME : InputMethodService() {
             setBackgroundColor(BG)
             setPadding(dp(3), dp(2), dp(3), dp(2))
         }
-        render()
+        doRender()
         return root
     }
 
@@ -140,13 +144,27 @@ class AbuWajaIME : InputMethodService() {
         candidatesStart: Int, candidatesEnd: Int
     ) {
         super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
-        if (::root.isInitialized) updateSuggestions()
+        if (::root.isInitialized) {
+            try { updateSuggestions() } catch (e: Throwable) { }
+        }
     }
 
     // ================= الرسم =================
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
+    private fun safe(f: () -> Unit) {
+        try {
+            f()
+        } catch (e: Throwable) {
+            toast("خطأ: " + e.javaClass.simpleName + " " + (e.message ?: ""))
+        }
+    }
+
     private fun render() {
+        handler.post { safe { doRender() } }
+    }
+
+    private fun doRender() {
         root.removeAllViews()
         sugViews.clear()
         val rtl = when (mode) {
@@ -198,14 +216,14 @@ class AbuWajaIME : InputMethodService() {
                 setMargins(dp(2), dp(3), dp(2), dp(3))
             }
             val rep = object : Runnable {
-                override fun run() { action(); handler.postDelayed(this, 50) }
+                override fun run() { safe(action); handler.postDelayed(this, 50) }
             }
             setOnTouchListener { v, e ->
                 when (e.action) {
                     MotionEvent.ACTION_DOWN -> {
                         v.isPressed = true
                         v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                        action()
+                        safe(action)
                         if (repeat) handler.postDelayed(rep, 400)
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
@@ -290,7 +308,7 @@ class AbuWajaIME : InputMethodService() {
                 maxLines = 1
                 setTextColor(GOLD)
                 layoutParams = LinearLayout.LayoutParams(0, MATCH, 1f)
-                setOnClickListener { onSuggestion((it as TextView).text.toString()) }
+                setOnClickListener { safe { onSuggestion((it as TextView).text.toString()) } }
             })
         }
         return rowOf(rtl, sugViews.toList(), 40).apply { setBackgroundColor(BAR) }
@@ -405,7 +423,7 @@ class AbuWajaIME : InputMethodService() {
         setTextColor(if (sel) Color.BLACK else GOLD)
         setBackgroundColor(if (sel) GOLD else Color.TRANSPARENT)
         layoutParams = LinearLayout.LayoutParams(0, MATCH, 1f)
-        setOnClickListener { click() }
+        setOnClickListener { safe(click) }
     }
 
     private fun tabBar(
@@ -441,9 +459,9 @@ class AbuWajaIME : InputMethodService() {
         }
     }
 
-    private fun item(text: String, onClick: () -> Unit, onLong: (() -> Unit)? = null) =
+    private fun item(label: String, onClick: () -> Unit, onLong: (() -> Unit)? = null) =
         TextView(this).apply {
-            this.text = text
+            text = label
             textSize = 16f
             gravity = Gravity.CENTER
             setTextColor(GOLD)
@@ -452,8 +470,8 @@ class AbuWajaIME : InputMethodService() {
             layoutParams = LinearLayout.LayoutParams(MATCH, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
                 setMargins(dp(4), dp(3), dp(4), dp(3))
             }
-            setOnClickListener { onClick() }
-            if (onLong != null) setOnLongClickListener { onLong(); true }
+            setOnClickListener { safe(onClick) }
+            if (onLong != null) setOnLongClickListener { safe(onLong); true }
         }
 
     private fun phrasePanel(): View {
